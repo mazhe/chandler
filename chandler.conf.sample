@@ -21,9 +21,11 @@ limit: 5000
 
 # Caching
 caching: no
-caching_resources_file: /tmp/chandler.resources.cache
+
+caching_resources_file: ~/.cache/chandler/resources.cache
 caching_resources_delay: 60
-caching_jobs_file: /tmp/chandler.jobs.cache
+
+caching_jobs_file: ~/.cache/chandler/jobs.cache
 caching_jobs_delay: 30
 
 #
