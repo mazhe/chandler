@@ -31,15 +31,14 @@ setup(
     zip_safe=False,
     description='A simple CLI utility displaying OAR cluster information '
                 'retrieved from the API.',
-    license="BSD",
+    license="GNU GPL v2",
     classifiers=[
-        'Development Status :: 1 - Planning',
+        'Development Status :: 4 - Beta',
         'Operating System :: OS Independent',
         'Intended Audience :: Developers',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'License :: OSI Approved :: BSD License',
-        'License :: OSI Approved :: GNU General Public License (GPL)',
+        'License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)',  # noqa
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: System :: Clustering',
     ],
