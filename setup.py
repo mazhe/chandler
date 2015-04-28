@@ -12,7 +12,7 @@ def read(filename):
 
 def get_version():
     return re.compile(r".*__version__ = '(.*?)'", re.S)\
-             .match(read('chandler.py')).group(1)
+             .match(read(op.join('chandler', '__init__.py'))).group(1)
 
 
 setup(
@@ -45,6 +45,6 @@ setup(
     ],
     entry_points='''
         [console_scripts]
-        chandler=chandler:main
+        chandler=chandler.main:main
     ''',
 )
