@@ -5,6 +5,8 @@ import os
 import pprint
 import ConfigParser
 
+from .utils import cached_property
+
 
 class Configuration(ConfigParser.ConfigParser):
     DEFAULT_CONFIG_FILES = [
@@ -41,6 +43,88 @@ class Configuration(ConfigParser.ConfigParser):
                           'environement variable' % self.DEFAULT_CONFIG_FILES)
             raise
         return True
+
+    @cached_property
+    def nodename_regex(self):
+        return self.get('output', 'nodename_regex')
+
+    @cached_property
+    def col_size(self):
+        return self.getint('output', 'col_size')
+
+    @cached_property
+    def col_span(self):
+        return self.getint('output', 'col_span')
+
+    @cached_property
+    def max_cols(self):
+        return self.getint('output', 'max_cols')
+
+    @cached_property
+    def users_stats_by_default(self):
+        return self.getboolean('output', 'users_stats_by_default')
+
+    @cached_property
+    def nodes_usage_by_default(self):
+        return self.getboolean('output', 'nodes_usage_by_default')
+
+    @cached_property
+    def nodes_header(self):
+        return self.get('output', 'nodes_header')
+
+    @cached_property
+    def nodes_format(self):
+        return self.get('output', 'nodes_format')
+
+    @cached_property
+    def comment_property(self):
+        try:
+            return self.get('output', 'comment_property')
+        except:
+            pass
+
+    @cached_property
+    def separations(self):
+        try:
+            return self.get('output', 'separations').split(',')
+        except:
+            return []
+
+    @cached_property
+    def cols(self):
+        cols = self.getint('output', 'columns')
+        # Compute the number of columns depending on the COLUMNS environment
+        # variable
+        try:
+            rows, columns = os.popen('stty size', 'r').read().split()
+            cols = int(int(columns) / self.col_size)
+        except:
+            pass
+        if cols == 0:
+            cols = 1
+        if cols > self.max_cols:
+            cols = self.max_cols
+        return cols
+
+    @cached_property
+    def ignore_proxy(self):
+        return self.getboolean('misc', 'ignore_proxy')
+
+    @cached_property
+    def cache(self):
+        info = {
+            'resources': {},
+            'jobs': {},
+        }
+        info['enabled'] = self.getboolean('oarapi', 'caching')
+        if info['enabled']:
+            for view in ('resources', 'jobs'):
+                cache_file = self.get('oarapi', 'caching_%s_file' % view)
+                info[view] = {
+                    'file': os.path.expanduser(cache_file),
+                    'delay': self.getint('oarapi', 'caching_%s_delay' % view)
+                }
+        return info
 
     def __str__(self):
         return pprint.pprint(self._sections)

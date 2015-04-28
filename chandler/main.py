@@ -4,7 +4,6 @@ from __future__ import absolute_import, unicode_literals
 
 from natsort import natsorted
 import sys
-import os
 import time
 import re
 from optparse import OptionParser
@@ -12,62 +11,27 @@ from collections import defaultdict
 from colorama import Fore, Back, Style
 
 from .configuration import Configuration
-from .utils import get_resources, get_jobs, cprint, init_colorama, reraise
+from .utils import (get, cprint, init_colorama, reraise,
+                    unset_proxy_from_env)
 
 
 def run(options, args):
     config = Configuration()
-
-    # Get some variables from the configuration file
-    COLS = config.getint('output', 'columns')
-    NODENAME_REGEX = config.get('output', 'nodename_regex')
-    COL_SIZE = config.getint('output', 'col_size')
-    COL_SPAN = config.getint('output', 'col_span')
-    MAX_COLS = config.getint('output', 'max_cols')
-    USERS_STATS_BY_DEFAULT = config.getboolean('output', 'users_stats_by_default')
-    NODES_USAGE_BY_DEFAULT = config.getboolean('output', 'nodes_usage_by_default')
-    NODES_HEADER = config.get('output', 'nodes_header')
-    NODES_FORMAT = config.get('output', 'nodes_format')
-    try:
-        COMMENT_PROPERTY = config.get('output', 'comment_property')
-    except:
-        COMMENT_PROPERTY = ""
-    try:
-        SEPARATIONS = config.get('output', 'separations')
-    except:
-        SEPARATIONS = ""
-    SEPARATIONS = SEPARATIONS.split(',')
-
-    # Compute the number of columns depending on the COLUMNS environment variable
-    try:
-        rows, columns = os.popen('stty size', 'r').read().split()
-        COLS = int(int(columns) / COL_SIZE)
-    except:
-        pass
-    if COLS == 0:
-        COLS = 1
-    if COLS > MAX_COLS:
-        COLS = MAX_COLS
-
     init_colorama()
+
     # Get rid of http_proxy if necessary
-    if config.getboolean('misc', 'ignore_proxy'):
-        try:
-            del os.environ['http_proxy']
-        except:
-            pass
-        try:
-            del os.environ['https_proxy']
-        except:
-            pass
+    if config.ignore_proxy:
+        unset_proxy_from_env()
 
     # Print a waiting message
     print('Querying OAR API...\n\033[1A'),
 
     # Get the data from the API
     # TODO: paginated results management
-    resources = get_resources()
-    jobs = get_jobs()
+    resources = get('/resources/details', config,
+                    reload_cache=options.reload_cache)['items']
+    jobs = get('/jobs/details', config,
+               reload_cache=options.reload_cache)['items']
 
     # Erase the waiting message
     print("\033[2K")
@@ -81,8 +45,9 @@ def run(options, args):
     nodes = natsorted(set([r["network_address"] for r in resources]))
 
     # Get the comment property if necessary
-    if COMMENT_PROPERTY != '':
-        comment = {r["network_address"]: r[COMMENT_PROPERTY] for r in resources}
+    if config.comment_property:
+        comment = {r["network_address"]: r[config.comment_property]
+                   for r in resources}
 
     # Loop on nodes and resources
     col = 0
@@ -90,13 +55,13 @@ def run(options, args):
     for node in nodes:
         c = 0
         node_resources = [r for r in resources if r["network_address"] == node]
-        p = re.match(NODENAME_REGEX, node)
+        p = re.match(config.nodename_regex, node)
         node_str = p.group(1)
-        if COMMENT_PROPERTY != '':
+        if config.comment_property:
             node_str += " (" + comment[node] + ")"
         else:
             node_str += ": "
-        string = node_str + " " * (COL_SPAN - len(node_str))
+        string = node_str + " " * (config.col_span - len(node_str))
         cprint(Fore.RESET + Back.RESET + string)
         for r in node_resources:
             c += 1
@@ -126,8 +91,8 @@ def run(options, args):
                         cprint(Back.WHITE + Fore.BLACK + "J")
         cprint(Fore.RESET + Back.RESET)
         col += 1
-        if col < COLS and node not in SEPARATIONS:
-            cprint(" " * (COL_SIZE - COL_SPAN - c))
+        if col < config.cols and node not in config.separations:
+            cprint(" " * (config.col_size - config.col_span - c))
         else:
             col = 0
             print
@@ -140,7 +105,8 @@ def run(options, args):
            Back.RESET + Fore.RESET + "=Besteffort ")
     cprint(Back.CYAN + " " + Back.RESET + "=Standby ")
     cprint(Back.WHITE + Fore.BLACK + "J" + Back.RESET + Fore.RESET + "=Job ")
-    cprint(Back.RED + Fore.BLACK + "S" + Back.RESET + Fore.RESET + "=Suspected ")
+    cprint(Back.RED + Fore.BLACK + "S" +
+           Back.RESET + Fore.RESET + "=Suspected ")
     cprint(Back.RED + Fore.BLACK + "A" + Back.RESET + Fore.RESET + "=Absent ")
     cprint(Back.RED + Fore.BLACK + "D" + Back.RESET + Fore.RESET + "=Dead ")
     print
@@ -155,7 +121,7 @@ def run(options, args):
                                                            len(assigned_resources))
 
     # Print users stats if necessary
-    if USERS_STATS_BY_DEFAULT ^ options.toggle_users and len(jobs) > 0:
+    if config.users_stats_by_default ^ options.toggle_users and len(jobs) > 0:
         print
         user_resources = defaultdict(int)
         user_running = defaultdict(int)
@@ -183,7 +149,7 @@ def run(options, args):
                                                               r, len(nodes))
 
     # Print nodes usage if necessary
-    if NODES_USAGE_BY_DEFAULT ^ options.toggle_nodes and len(jobs) > 0:
+    if config.nodes_usage_by_default ^ options.toggle_nodes and len(jobs) > 0:
         print
         assigned_nodes = [[r["network_address"], j]
                           for j in jobs
@@ -191,7 +157,7 @@ def run(options, args):
         nodes_usage = defaultdict(list)
         for c in assigned_nodes:
             nodes_usage[c[0]].append(c[1])
-        print NODES_HEADER
+        print config.nodes_header
         for node in natsorted(nodes_usage.keys()):
             print node + ":"
             for job in nodes_usage[node]:
@@ -199,10 +165,10 @@ def run(options, args):
                 d = time.strftime("%H:%M:%S", time.gmtime(remain_time))
                 r = [r for r in resources if r["network_address"] ==
                      node and r["id"] in [rj["id"] for rj in job["resources"]]]
-                print "    " + NODES_FORMAT.format(job["id"], job["owner"],
-                                                   str(job["name"]), len(r),
-                                                   ",".join(job["types"]),
-                                                   d, job["project"])
+                print("    " + config.nodes_format.format(job["id"], job["owner"],
+                                                          str(job["name"]), len(r),
+                                                          ",".join(job["types"]),
+                                                          d, job["project"]))
 
 
 def main():
