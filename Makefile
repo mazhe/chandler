@@ -1,9 +1,9 @@
 SHELL := /bin/bash
 
-# Internal variables.
-PACKAGE=chandler
 # these files should pass flakes8
-FLAKE8_WHITELIST=$(shell find chandler -name "*.py")
+FLAKE8_WHITELIST=$(shell find . -name "*.py")
+
+.PHONY: sdist
 
 help:
 	@echo "Please use 'make <target>' where <target> is one of"
@@ -17,7 +17,7 @@ help:
 
 init:
 	pip install -e .
-	pip install ipdb jedi wheel flake8
+	pip install -U setuptools pip ipdb jedi flake8 wheel
 
 clean:
 	rm -fr build/
