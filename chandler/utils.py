@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import os
 import time
 import sys
+from io import open
 try:
     import simplejson as json
 except ImportError:
@@ -32,7 +33,7 @@ def touch(fname, times=None):
         os.utime(fname, times)
 
 
-def get_from_api(uri):
+def get_from_api(uri, config):
     """
         Get an object from the api
     """
@@ -49,41 +50,24 @@ def get_from_api(uri):
         return r.json
 
 
-def get(uri, config, cache_file, cache_delay, reload_cache=False):
+def get(uri, config, reload_cache=False):
     """
         Get from the cache or from the api
     """
-    cache_file = os.path.expanduser(cache_file)
-    if (config.get('oarapi', 'caching') and not reload_cache
-            and os.path.isfile(cache_file)
-            and time.time() - os.path.getmtime(cache_file) < cache_delay):
-        json_data = open(cache_file)
-        return json.load(json_data)
+    view = uri.split("/")[1]
+    if (config.cache['enabled'] and not reload_cache):
+        cache_time = time.time() - os.path.getmtime(config.cache[view]['file'])
+        if (os.path.isfile(config.cache[view]['file'])
+                and cache_time < config.cache[view]['delay']):
+            with open(config.cache[view]['file']) as fd:
+                return json.load(fd)
     else:
-        data = get_from_api(uri)
-    if config.get('oarapi', 'caching'):
-        touch(cache_file)
-        chmod = True
-        if os.path.isfile(cache_file):
-            chmod = False
-        file = open(cache_file, 'w')
-        json.dump(data, file)
-        file.close
-        if chmod:
-            os.chmod(cache_file, 0666)
+        data = get_from_api(uri, config)
+    if config.cache['enabled']:
+        touch(config.cache[view]['file'])
+        with open(config.cache[view]['file'], 'w') as fd:
+            json.dump(data, fd)
     return data
-
-
-def get_resources(config):
-    cache_file = config.get('oarapi', 'caching_resources_file')
-    cache_delay = config.getint('oarapi', 'caching_resources_delay')
-    return get('/resources/details', cache_file, cache_delay)["items"]
-
-
-def get_jobs(config):
-    cache_file = config.get('oarapi', 'caching_jobs_file')
-    cache_delay = config.getint('oarapi', 'caching_jobs_delay')
-    return get('/jobs/details', cache_file, cache_delay)["items"]
 
 
 def cprint(str, *args):
