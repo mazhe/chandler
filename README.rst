@@ -1,8 +1,7 @@
 Chandler
 ========
 
-A simple CLI utility to display informations about OAR cluster from the API.
-
+A simple CLI utility displaying OAR cluster information retrieved from the API.
 
 Installation
 ------------
