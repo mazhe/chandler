@@ -21,13 +21,15 @@ setup(
     author_email='Bruno.Bzeznik@imag.fr',
     version=get_version(),
     url='https://github.com/oar-team/chandler',
-    py_modules=['chandler'],
     install_requires=[
         'requests',
         'natsort',
         'colorama',
     ],
-    include_package_data=True,
+    packages=['chandler'],
+    package_data={
+        'chandler': ['*.conf'],
+    },
     zip_safe=False,
     description='A simple CLI utility displaying OAR cluster information '
                 'retrieved from the API.',

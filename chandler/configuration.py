@@ -12,6 +12,8 @@ class Configuration(ConfigParser.ConfigParser):
     DEFAULT_CONFIG_FILES = [
         os.path.join(os.environ['HOME'], '.config', 'chandler.conf'),
         os.path.join('/etc', 'oar', 'chandler.conf'),
+        os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                     'default_chandler.conf'),
     ]
 
     def __init__(self):
