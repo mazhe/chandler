@@ -26,3 +26,13 @@ Or if you already pulled the sources::
 Or if you don't have pip::
 
   $ easy_install chandler
+
+Configuration
+-------------
+
+See the default configuration file: chandler/default_chandler.conf. The file is self-explanatory.
+
+For any customization, copy this file in any of the following locations:
+  - /etc/oar/chandler.conf
+  - ~/.config/chandler.conf
+ 
