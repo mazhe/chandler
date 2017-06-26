@@ -35,4 +35,4 @@ See the default configuration file: chandler/default_chandler.conf. The file is 
 For any customization, copy this file in any of the following locations:
   - /etc/oar/chandler.conf
   - ~/.config/chandler.conf
- 
+ Or set the CHANDLER_CONF_FILE environment variable with the location of your choice.
