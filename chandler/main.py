@@ -44,7 +44,7 @@ def run(options, args):
                               ("status" in r and r["status"] == "assigned"))}
 
     # Compute sorted node list
-    nodes = natsorted(set([r["network_address"] for r in resources]))
+    nodes = natsorted(set([r["network_address"] for r in resources if (r["network_address"] != "" and r["type"] == "default")]))
 
     # Get the comment property if necessary
     if config.comment_property:
@@ -56,7 +56,7 @@ def run(options, args):
     down = 0
     for node in nodes:
         c = 0
-        node_resources = [r for r in resources if r["network_address"] == node]
+        node_resources = [r for r in resources if (r["network_address"] == node and r["type"] == "default")]
         p = re.match(config.nodename_regex, node)
         node_str = p.group(1)
         if config.comment_property:
