@@ -39,7 +39,9 @@ def run(options, args):
     # Compute assigned resources dictionnary
     assigned_resources = {r["id"]: j["types"] for j in jobs
                           for r in j["resources"]
-                          if r["status"] == "assigned"}
+                          # reflect changes in the OAR API (1.0.3, oar 2.5.8) + keep backward compatibily
+                          if (("resources_status" in j and j["resources_status"] == "assigned") or
+                              ("status" in r and r["status"] == "assigned"))}
 
     # Compute sorted node list
     nodes = natsorted(set([r["network_address"] for r in resources]))
@@ -153,7 +155,10 @@ def run(options, args):
         print
         assigned_nodes = [[r["network_address"], j]
                           for j in jobs
-                          for r in j["nodes"] if r["status"] == "assigned"]
+                          for r in j["nodes"]
+                          # reflect changes in the OAR API (1.0.3, oar 2.5.8) + keep backward compatibily
+                          if (("resources_status" in j and j["resources_status"] == "assigned") or
+                              ("status" in r and r["status"] == "assigned"))]
         nodes_usage = defaultdict(list)
         for c in assigned_nodes:
             nodes_usage[c[0]].append(c[1])
