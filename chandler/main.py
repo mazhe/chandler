@@ -166,7 +166,7 @@ def run(options, args):
         for node in natsorted(nodes_usage.keys()):
             print node + ":"
             for job in nodes_usage[node]:
-                remain_time = job["start_time"] + job["walltime"] - time.time()
+                remain_time = float(job["start_time"]) + float(job["walltime"]) - time.time()
                 d = time.strftime("%H:%M:%S", time.gmtime(remain_time))
                 r = [r for r in resources if r["network_address"] ==
                      node and r["id"] in [rj["id"] for rj in job["resources"]]]
