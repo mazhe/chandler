@@ -78,7 +78,12 @@ def run(options, args):
                     cprint(Back.RED + Fore.WHITE + "A")
             elif r["state"] == "Suspected":
                 down += 1
-                cprint(Back.RED + Fore.WHITE + "S")
+                try:
+                    types=assigned_resources[r["id"]]
+                except:
+                    cprint (Back.RED+Fore.WHITE+"S")
+                else:
+                    cprint (Back.YELLOW+Fore.BLACK+"S")
             elif r["state"] == "Alive":
                 try:
                     types = assigned_resources[r["id"]]
