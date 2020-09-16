@@ -114,6 +114,8 @@ def run(options, args):
     cprint(Back.WHITE + Fore.BLACK + "J" + Back.RESET + Fore.RESET + "=Job ")
     cprint(Back.RED + Fore.BLACK + "S" +
            Back.RESET + Fore.RESET + "=Suspected ")
+    cprint(Back.YELLOW + Fore.BLACK + "S" +
+           Back.RESET + Fore.RESET + "=Suspected with running job ")
     cprint(Back.RED + Fore.BLACK + "A" + Back.RESET + Fore.RESET + "=Absent ")
     cprint(Back.RED + Fore.BLACK + "D" + Back.RESET + Fore.RESET + "=Dead ")
     print
