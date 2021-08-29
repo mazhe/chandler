@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 from natsort import natsorted
 import sys
@@ -102,11 +102,11 @@ def run(options, args):
             cprint(" " * (config.col_size - config.col_span - c))
         else:
             col = 0
-            print
+            print()
 
     # Legend
     print(Fore.RESET + Back.RESET)
-    print
+    print()
     cprint(Back.GREEN + " " + Back.RESET + "=Free ")
     cprint(Back.GREEN + Fore.BLACK + "B" +
            Back.RESET + Fore.RESET + "=Besteffort ")
@@ -118,20 +118,20 @@ def run(options, args):
            Back.RESET + Fore.RESET + "=Suspected with running job ")
     cprint(Back.RED + Fore.BLACK + "A" + Back.RESET + Fore.RESET + "=Absent ")
     cprint(Back.RED + Fore.BLACK + "D" + Back.RESET + Fore.RESET + "=Dead ")
-    print
+    print()
 
     # Reset terminal styles
     print(Fore.RESET + Back.RESET + Style.RESET_ALL)
 
     # Print summary
-    print "{} jobs, {} resources, {} down, {} used".format(len(jobs),
+    print("{} jobs, {} resources, {} down, {} used".format(len(jobs),
                                                            len(resources),
                                                            down,
-                                                           len(assigned_resources))
+                                                           len(assigned_resources)))
 
     # Print users stats if necessary
     if config.users_stats_by_default ^ options.toggle_users and len(jobs) > 0:
-        print
+        print()
         user_resources = defaultdict(int)
         user_running = defaultdict(int)
         user_waiting = defaultdict(int)
@@ -148,18 +148,18 @@ def run(options, args):
                 user_resources[j["owner"]] += 0
                 user_nodes[j["owner"]] += []
 
-        print "               Jobs       Jobs"
-        print "User          running    waiting   Resources    Nodes"
-        print "====================================================="
-        for u, r in user_resources.iteritems():
+        print("               Jobs       Jobs")
+        print("User          running    waiting   Resources    Nodes")
+        print("=====================================================")
+        for u, r in user_resources.items():
             nodes = set(user_nodes[u])
-            print "{:<16} {:<10} {:<10} {:<10} {:<10}".format(u, user_running[u],
+            print("{:<16} {:<10} {:<10} {:<10} {:<10}".format(u, user_running[u],
                                                               user_waiting[u],
-                                                              r, len(nodes))
+                                                              r, len(nodes)))
 
     # Print nodes usage if necessary
     if config.nodes_usage_by_default ^ options.toggle_nodes and len(jobs) > 0:
-        print
+        print()
         assigned_nodes = [[r["network_address"], j]
                           for j in jobs
                           for r in j["nodes"]
@@ -169,9 +169,9 @@ def run(options, args):
         nodes_usage = defaultdict(list)
         for c in assigned_nodes:
             nodes_usage[c[0]].append(c[1])
-        print config.nodes_header
-        for node in natsorted(nodes_usage.keys()):
-            print node + ":"
+        print(config.nodes_header)
+        for node in natsorted(list(nodes_usage.keys())):
+            print(node + ":")
             for job in nodes_usage[node]:
                 remain_time = float(job["start_time"]) + float(job["walltime"]) - time.time()
                 d = time.strftime("%H:%M:%S", time.gmtime(remain_time))

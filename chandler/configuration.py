@@ -3,12 +3,16 @@ from __future__ import absolute_import, unicode_literals
 
 import os
 import pprint
-import ConfigParser
+import sys
+if sys.version_info[0] < 3:
+    from ConfigParser import ConfigParser
+else:
+    from configparser import ConfigParser
 
 from .utils import cached_property
 
 
-class Configuration(ConfigParser.ConfigParser):
+class Configuration(ConfigParser):
     DEFAULT_CONFIG_FILES = [
         os.path.join(os.environ['HOME'], '.config', 'chandler.conf'),
         os.path.join('/etc', 'oar', 'chandler.conf'),
@@ -20,7 +24,7 @@ class Configuration(ConfigParser.ConfigParser):
         if os.environ.get('CHANDLER_CONF_FILE', None):
             env_file = os.environ['CHANDLER_CONF_FILE']
             self.DEFAULT_CONFIG_FILES.insert(0, env_file)
-        ConfigParser.ConfigParser.__init__(self, allow_no_value=False)
+        ConfigParser.__init__(self, allow_no_value=False)
         for config_file in self.DEFAULT_CONFIG_FILES[:-1]:
             if self.load_file(config_file, silent=True):
                 break
